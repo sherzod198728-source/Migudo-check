@@ -59,6 +59,10 @@
     <div class="result" id="result">0</div>
   </div>
   <div class="keys">
+    <button class="op" data-k="^2" aria-label="Kvadrat">x²</button>
+    <button class="op" data-k="^" aria-label="Darajaga ko'tarish">xʸ</button>
+    <button class="op" data-k="√" aria-label="Kvadrat ildiz">√</button>
+    <button class="op" data-k="∛" aria-label="Kub ildiz">∛</button>
     <button class="op" data-k="C">C</button>
     <button class="op" data-k="(">(</button>
     <button class="op" data-k=")">)</button>
@@ -72,7 +76,7 @@
     <button data-k="⌫">⌫</button><button data-k="0">0</button><button data-k=",">,</button>
     <button class="eq" data-k="=">=</button>
   </div>
-  <div class="hint">Klaviaturadan ham yozish mumkin: Enter = hisoblash, Esc = tozalash</div>
+  <div class="hint">Klaviaturadan ham yozish mumkin: Enter = hisoblash, Esc = tozalash, ^ = daraja</div>
 </div>
 <script>
   const exprEl = document.getElementById("expr");
@@ -92,9 +96,7 @@
       if (!t || (t.match(/\./g) || []).length > 1) throw new Error("Ifoda noto'g'ri");
       return parseFloat(t);
     }
-    function factor() {
-      if (peek() === "-") { i++; return -factor(); }
-      if (peek() === "+") { i++; return factor(); }
+    function primary() {
       if (peek() === "(") {
         i++;
         const v = sum();
@@ -102,12 +104,31 @@
         i++;
         return v;
       }
+      if (peek() === "√") {
+        i++;
+        const v = primary();
+        if (v < 0) throw new Error("Manfiy sondan ildiz chiqmaydi");
+        return Math.sqrt(v);
+      }
+      if (peek() === "∛") { i++; return Math.cbrt(primary()); }
       return number();
+    }
+    // Daraja o'ngdan hisoblanadi: 2^3^2 = 2^9, −2^2 = −4
+    function power() {
+      const v = primary();
+      if (peek() === "^") { i++; return Math.pow(v, factor()); }
+      return v;
+    }
+    function factor() {
+      if (peek() === "-") { i++; return -factor(); }
+      if (peek() === "+") { i++; return factor(); }
+      return power();
     }
     function product() {
       let v = factor();
-      while (peek() === "*" || peek() === "/") {
-        const op = s[i++];
+      // 2√9 yoki 2(3+1) ko'paytirish deb tushuniladi
+      while (peek() === "*" || peek() === "/" || peek() === "√" || peek() === "∛" || peek() === "(") {
+        const op = (peek() === "*" || peek() === "/") ? s[i++] : "*";
         const r = factor();
         if (op === "/" && r === 0) throw new Error("Nolga bo'lish mumkin emas");
         v = op === "*" ? v * r : v / r;
@@ -125,6 +146,8 @@
     }
     const v = sum();
     if (i !== s.length) throw new Error("Ifoda noto'g'ri");
+    if (Number.isNaN(v)) throw new Error("Natija aniqlanmagan");
+    if (!Number.isFinite(v)) throw new Error("Natija juda katta");
     return v;
   }
 
@@ -156,10 +179,10 @@
       }
       return;
     }
-    const isOp = "+−×÷".includes(k);
+    const isOp = ["+", "−", "×", "÷", "^", "^2"].includes(k);
     if (justCalculated && !isOp) expr = "";
     justCalculated = false;
-    if (isOp && expr && "+−×÷".includes(expr.slice(-1))) expr = expr.slice(0, -1);
+    if (isOp && expr && "+−×÷^".includes(expr.slice(-1))) expr = expr.slice(0, -1);
     expr += k;
     render();
   }
@@ -170,7 +193,7 @@
                    "=": "=", "Escape": "C", "Backspace": "⌫" };
   document.addEventListener("keydown", e => {
     const k = keyMap[e.key] || e.key;
-    if (/^[0-9]$/.test(k) || "+−×÷(),=C⌫".includes(k) && k.length === 1) {
+    if (/^[0-9]$/.test(k) || "+−×÷^(),=C⌫".includes(k) && k.length === 1) {
       e.preventDefault();
       press(k);
     }
