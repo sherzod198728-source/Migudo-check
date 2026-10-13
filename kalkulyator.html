@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kalkulyator</title>
+<style>
+  :root {
+    --bg: #eef1f5; --card: #ffffff; --text: #1d2330; --muted: #6b7385;
+    --key: #f2f4f8; --key-hover: #e4e8ef; --op: #dfe7ff; --op-text: #2848b8;
+    --eq: #2f5bea; --eq-text: #ffffff; --danger: #c0392b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171d; --card: #1f232b; --text: #eef1f6; --muted: #9aa3b5;
+      --key: #2a2f39; --key-hover: #353b47; --op: #2a3557; --op-text: #a9bcff;
+      --eq: #4a72ff; --eq-text: #ffffff; --danger: #ff7b6b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: var(--bg); color: var(--text); padding: 16px;
+    font-family: "Segoe UI", Arial, sans-serif;
+  }
+  .calc {
+    width: 100%; max-width: 340px; background: var(--card); border-radius: 20px;
+    padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  }
+  .screen { text-align: right; padding: 8px 6px 16px; min-height: 96px; }
+  .expr { color: var(--muted); font-size: 18px; min-height: 24px; word-break: break-all; }
+  .result { font-size: 40px; font-weight: 600; word-break: break-all; }
+  .result.error { color: var(--danger); font-size: 22px; }
+  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  button {
+    border: 0; border-radius: 14px; height: 60px; font-size: 22px; cursor: pointer;
+    background: var(--key); color: var(--text); font-family: inherit;
+  }
+  button:hover { background: var(--key-hover); }
+  button:active { transform: scale(.96); }
+  .op { background: var(--op); color: var(--op-text); }
+  .eq { background: var(--eq); color: var(--eq-text); }
+  .hint { margin-top: 14px; text-align: center; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="calc">
+  <div class="screen">
+    <div class="expr" id="expr"></div>
+    <div class="result" id="result">0</div>
+  </div>
+  <div class="keys">
+    <button class="op" data-k="C">C</button>
+    <button class="op" data-k="(">(</button>
+    <button class="op" data-k=")">)</button>
+    <button class="op" data-k="÷">÷</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+    <button class="op" data-k="×">×</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+    <button class="op" data-k="−">−</button>
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+    <button class="op" data-k="+">+</button>
+    <button data-k="⌫">⌫</button><button data-k="0">0</button><button data-k=",">,</button>
+    <button class="eq" data-k="=">=</button>
+  </div>
+  <div class="hint">Klaviaturadan ham yozish mumkin: Enter = hisoblash, Esc = tozalash</div>
+</div>
+<script>
+  const exprEl = document.getElementById("expr");
+  const resultEl = document.getElementById("result");
+  let expr = "";
+  let justCalculated = false;
+
+  // Ifodani hisoblash (eval ishlatilmaydi): + − × ÷ va qavslar
+  function calculate(text) {
+    const s = text.replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/,/g, ".");
+    let i = 0;
+    const peek = () => s[i];
+    function number() {
+      const start = i;
+      while (i < s.length && /[0-9.]/.test(s[i])) i++;
+      const t = s.slice(start, i);
+      if (!t || (t.match(/\./g) || []).length > 1) throw new Error("Ifoda noto'g'ri");
+      return parseFloat(t);
+    }
+    function factor() {
+      if (peek() === "-") { i++; return -factor(); }
+      if (peek() === "+") { i++; return factor(); }
+      if (peek() === "(") {
+        i++;
+        const v = sum();
+        if (peek() !== ")") throw new Error("Qavs yopilmagan");
+        i++;
+        return v;
+      }
+      return number();
+    }
+    function product() {
+      let v = factor();
+      while (peek() === "*" || peek() === "/") {
+        const op = s[i++];
+        const r = factor();
+        if (op === "/" && r === 0) throw new Error("Nolga bo'lish mumkin emas");
+        v = op === "*" ? v * r : v / r;
+      }
+      return v;
+    }
+    function sum() {
+      let v = product();
+      while (peek() === "+" || peek() === "-") {
+        const op = s[i++];
+        const r = product();
+        v = op === "+" ? v + r : v - r;
+      }
+      return v;
+    }
+    const v = sum();
+    if (i !== s.length) throw new Error("Ifoda noto'g'ri");
+    return v;
+  }
+
+  function format(n) {
+    const r = Math.round(n * 1e10) / 1e10;
+    return String(r).replace(".", ",");
+  }
+
+  function render() {
+    resultEl.classList.remove("error");
+    resultEl.textContent = expr || "0";
+  }
+
+  function press(k) {
+    if (k === "C") { expr = ""; exprEl.textContent = ""; justCalculated = false; render(); return; }
+    if (k === "⌫") { expr = expr.slice(0, -1); justCalculated = false; render(); return; }
+    if (k === "=") {
+      if (!expr) return;
+      try {
+        const v = format(calculate(expr));
+        exprEl.textContent = expr + " =";
+        expr = v;
+        justCalculated = true;
+        render();
+      } catch (e) {
+        exprEl.textContent = expr;
+        resultEl.textContent = e.message;
+        resultEl.classList.add("error");
+      }
+      return;
+    }
+    const isOp = "+−×÷".includes(k);
+    if (justCalculated && !isOp) expr = "";
+    justCalculated = false;
+    if (isOp && expr && "+−×÷".includes(expr.slice(-1))) expr = expr.slice(0, -1);
+    expr += k;
+    render();
+  }
+
+  document.querySelectorAll("button").forEach(b => b.addEventListener("click", () => press(b.dataset.k)));
+
+  const keyMap = { "*": "×", "x": "×", "/": "÷", ":": "÷", "-": "−", ".": ",", "Enter": "=",
+                   "=": "=", "Escape": "C", "Backspace": "⌫" };
+  document.addEventListener("keydown", e => {
+    const k = keyMap[e.key] || e.key;
+    if (/^[0-9]$/.test(k) || "+−×÷(),=C⌫".includes(k) && k.length === 1) {
+      e.preventDefault();
+      press(k);
+    }
+  });
+</script>
+</body>
+</html>
