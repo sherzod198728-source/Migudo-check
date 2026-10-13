@@ -18,6 +18,6 @@ dalvik-exchange --dex --min-sdk-version=21 --output="$OUT/classes.dex" "$OUT/cla
 
 zipalign -f -p 4 "$OUT/unsigned.apk" "$OUT/aligned.apk"
 apksigner sign --ks "${KEYSTORE:-kalit.jks}" --ks-pass "pass:${KS_PASS:?KS_PASS kerak}" \
-  --out ../Kalkulyator.apk "$OUT/aligned.apk"
+  --v4-signing-enabled false --out ../Kalkulyator.apk "$OUT/aligned.apk"
 apksigner verify --print-certs ../Kalkulyator.apk | head -1
 echo "Tayyor: ../Kalkulyator.apk"
