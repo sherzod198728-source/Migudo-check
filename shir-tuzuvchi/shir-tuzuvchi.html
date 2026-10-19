@@ -728,7 +728,7 @@ const SEC_NAME = { s2:'II', s3:'III', s4:'IV', s5:'V' };
 function collectTexts(t){
   const refs = [];
   const add = (obj, key, label) => { const v = obj[key]; if (typeof v === 'string' && /[A-Za-z\u0400-\u04FF]{2,}/.test(v)) refs.push({ obj, key, label }); };
-  add(t, 'daraja', 'Ilmiy darajasi va unvoni');   // F.I.Sh — kishi ismi, tekshirilmaydi add(t, 'lavozim', 'Lavozimi');
+  add(t, 'daraja', 'Ilmiy darajasi va unvoni'); add(t, 'lavozim', 'Lavozimi');   // F.I.Sh — kishi ismi, tekshirilmaydi
   ['kuz','bahor'].forEach(s => (t.yuk[s] || []).forEach((r, i) => { const L = 'I bo‘lim, ' + (s === 'kuz' ? 'kuzgi' : 'bahorgi') + ' semestr, ' + (i + 1) + '-fan'; add(r, 'fan', L + ' — fan nomi'); /* yo‘nalish (Uzmu, FarDU…) tekshirilmaydi */ }));
   ['s2','s3','s4','s5'].forEach(k => (t[k] || []).forEach((it, i) => {
     const L = SEC_NAME[k] + ' bo‘lim, ' + (i + 1) + '-band';
@@ -1116,7 +1116,7 @@ function semTable(t, sem){
         const lines = pasteTa.value.split(/\r?\n/).filter(l => l.trim());
         let n = 0;
         lines.forEach(l => {
-          const c = l.split('\t'); if (!c[0] || /^fan/i.test(c[0].trim())) return;
+          const c = l.split('\t'); if (!c[0] || /^fan(ning)? nomi/i.test(c[0].trim())) return;   // faqat sarlavha qatori; “Fanlararo…” kabi fanlar tashlab ketilmaydi
           const g = k => (c[k] || '').trim();
           const wide = c.length >= 19;   // new layout carries stream/group/subgroup counts
           rows.push({ fan:g(0), yon:g(1), kurs:g(2), oqim:g(3), guruh:g(4), talaba:g(5), no: wide ? g(6) : '', ng: wide ? g(7) : '', nl: wide ? g(8) : '', r: YCOLS.map((_, i) => num(c[(wide ? 9 : 6) + i])), a: [] }); n++;
@@ -1375,7 +1375,7 @@ $('#fileImport').addEventListener('change', async e => {
 $('#btnAdd').addEventListener('click', () => { const t = newTeacher(''); t.order = T.length; T.push(t); cur = t.id; tab = 'info'; queueSave(t.id); renderAll(); $('#i_fish')?.focus(); });
 $('#btnCopy').addEventListener('click', () => {
   const s = curT(); if (!s) return;
-  const t = clone(s); t.id = uid(); t.fish = ''; t.qisqa = ''; t.order = T.length; t.yuk = { kuz:[], bahor:[] };
+  const t = clone(s); t.id = uid(); t.fish = ''; t.qisqa = ''; t.order = T.length; t.yuk = { kuz:[], bahor:[] }; t.updated = Date.now(); delete t.sample;
   T.push(t); cur = t.id; tab = 'info'; queueSave(t.id); renderAll(); toast('II–V bo‘limlar nusxalandi, yuklama bo‘sh');
 });
 $('#btnDel').addEventListener('click', () => { if (curT()) $('#delConfirm').classList.add('on'); });
