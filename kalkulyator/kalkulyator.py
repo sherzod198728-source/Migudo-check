@@ -1,8 +1,8 @@
 """Oddiy kalkulyator.
 
-Ishga tushirish:  python kalkulyator.py
+Işga tuşiriş:  python kalkulyator.py
 Misollar:  2 + 3 * 4,  (10 - 4) / 3,  2 ** 10,  17 % 5
-Chiqish uchun:  q
+Çiqiş uçun:  q
 """
 
 import ast
@@ -31,7 +31,7 @@ def _hisobla(tugun):
         return AMALLAR[type(tugun.op)](chap, ong)
     if isinstance(tugun, ast.UnaryOp) and type(tugun.op) in AMALLAR:
         return AMALLAR[type(tugun.op)](_hisobla(tugun.operand))
-    raise ValueError("faqat sonlar va + - * / // % ** ( ) ishlatish mumkin")
+    raise ValueError("faqat sonlar va + - * / // % ** ( ) işlatiş mumkin")
 
 
 def hisobla(ifoda):
@@ -44,23 +44,23 @@ def hisobla(ifoda):
 
 
 def main():
-    print("Kalkulyator. Ifoda kiriting (masalan: 2 + 3 * 4). Chiqish: q")
+    print("Kalkulyator. Ifoda kiriting (masalan: 2 + 3 * 4). Çiqiş: q")
     while True:
         try:
             ifoda = input(">>> ").strip()
         except (EOFError, KeyboardInterrupt):
             print()
             break
-        if ifoda.lower() in ("q", "chiqish", "exit"):
+        if ifoda.lower() in ("q", "çiqiş", "chiqish", "exit"):
             break
         if not ifoda:
             continue
         try:
             print("=", hisobla(ifoda))
         except ZeroDivisionError:
-            print("Xato: nolga bo'lish mumkin emas")
+            print("Xato: nolga böliş mumkin emas")
         except SyntaxError:
-            print("Xato: ifoda noto'g'ri yozilgan")
+            print("Xato: ifoda notöğri yozilgan")
         except (ValueError, OverflowError) as e:
             print("Xato:", e)
     print("Xayr!")

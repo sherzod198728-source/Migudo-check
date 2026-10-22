@@ -60,7 +60,7 @@
   </div>
   <div class="keys">
     <button class="op" data-k="^2" aria-label="Kvadrat">x²</button>
-    <button class="op" data-k="^" aria-label="Darajaga ko'tarish">xʸ</button>
+    <button class="op" data-k="^" aria-label="Darajaga kötariş">xʸ</button>
     <button class="op" data-k="√" aria-label="Kvadrat ildiz">√</button>
     <button class="op" data-k="∛" aria-label="Kub ildiz">∛</button>
     <button class="op" data-k="C">C</button>
@@ -76,7 +76,7 @@
     <button data-k="⌫">⌫</button><button data-k="0">0</button><button data-k=",">,</button>
     <button class="eq" data-k="=">=</button>
   </div>
-  <div class="hint">Klaviaturadan ham yozish mumkin: Enter = hisoblash, Esc = tozalash, ^ = daraja</div>
+  <div class="hint">Klaviaturadan ham yoziş mumkin: Enter = hisoblaş, Esc = tozalaş, ^ = daraja</div>
 </div>
 <script>
   const exprEl = document.getElementById("expr");
@@ -93,7 +93,7 @@
       const start = i;
       while (i < s.length && /[0-9.]/.test(s[i])) i++;
       const t = s.slice(start, i);
-      if (!t || (t.match(/\./g) || []).length > 1) throw new Error("Ifoda noto'g'ri");
+      if (!t || (t.match(/\./g) || []).length > 1) throw new Error("Ifoda notöğri");
       return parseFloat(t);
     }
     function primary() {
@@ -107,7 +107,7 @@
       if (peek() === "√") {
         i++;
         const v = primary();
-        if (v < 0) throw new Error("Manfiy sondan ildiz chiqmaydi");
+        if (v < 0) throw new Error("Manfiy sondan ildiz çiqmaydi");
         return Math.sqrt(v);
       }
       if (peek() === "∛") { i++; return Math.cbrt(primary()); }
@@ -130,7 +130,7 @@
       while (peek() === "*" || peek() === "/" || peek() === "√" || peek() === "∛" || peek() === "(") {
         const op = (peek() === "*" || peek() === "/") ? s[i++] : "*";
         const r = factor();
-        if (op === "/" && r === 0) throw new Error("Nolga bo'lish mumkin emas");
+        if (op === "/" && r === 0) throw new Error("Nolga böliş mumkin emas");
         v = op === "*" ? v * r : v / r;
       }
       return v;
@@ -145,7 +145,7 @@
       return v;
     }
     const v = sum();
-    if (i !== s.length) throw new Error("Ifoda noto'g'ri");
+    if (i !== s.length) throw new Error("Ifoda notöğri");
     if (Number.isNaN(v)) throw new Error("Natija aniqlanmagan");
     if (!Number.isFinite(v)) throw new Error("Natija juda katta");
     return v;
